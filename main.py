@@ -18,13 +18,15 @@ import webapp2
 import cgi
 import re
 
+username = ""
+
 class SignupHandler(webapp2.RequestHandler):
 
     def build_form(self, user_error="", username="",
         pass_error="", pass_two_error="", em_error="", email=""):
 
         username_label = "<label>Username: </label>"
-        username_input = "<input type='text' name='username' value='%(username)s'/>"
+        username_input = "<input type='text' method='post' name='username' value='%(username)s'/>"
         username_error = "<div style='color:red'>%(user_error)s</div>"
         username_field = username_label + username_input + username_error
 
@@ -75,11 +77,11 @@ class SignupHandler(webapp2.RequestHandler):
         email_test = self.valid_email(self.request.get('email'))
 
         if username_test and password_one_test and password_two_test and email_test:
-            return self.redirect("/thanks")
+            return self.redirect("/thanks?username={}".format(self.request.get('username')))
 
         if self.request.get('email') == "":
             if username_test and password_one_test and password_two_test:
-                return self.redirect("/thanks")
+                return self.redirect("/thanks?username={}".format(self.request.get('username')))
 
         if not username_test:
             user_error = "Not a valid {}".format('username')
@@ -92,7 +94,7 @@ class SignupHandler(webapp2.RequestHandler):
             pass_error = ""
 
         if not password_two_test:
-            pass_two_error = "Passwords must be indentical"
+            pass_two_error = "Passwords must be identical"
         else:
             pass_two_error = ""
 
@@ -111,8 +113,14 @@ class SignupHandler(webapp2.RequestHandler):
 
 
 class ThanksHandler(webapp2.RequestHandler):
+    def build_thanks(self):
+        message_text = "Welcome, {}. Thank you for signing up!".format(self.request.get('username'))
+        message = "<p>" + message_text + "</p>"
+        self.response.write(message)
+
     def get(self):
-        self.response.write("Thank you for signing up!")
+        return self.build_thanks()
+
 
 app = webapp2.WSGIApplication([
     ('/', SignupHandler),
